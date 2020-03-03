@@ -5,13 +5,10 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Stream;
 
-import net.lingala.zip4j.model.ExtraDataRecord;
-import net.lingala.zip4j.model.FileHeader;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -21,6 +18,8 @@ import org.springframework.web.multipart.MultipartFile;
 
 import net.lingala.zip4j.ZipFile;
 import net.lingala.zip4j.exception.ZipException;
+import net.lingala.zip4j.model.ExtraDataRecord;
+import net.lingala.zip4j.model.FileHeader;
 
 /**
  * 应用模块名称
@@ -87,7 +86,7 @@ public class HelloController {
                 }
             });
 
-
+            // 执行上传操作与数据添加 单独封装
         } catch (ZipException e) {
             e.printStackTrace();
             return "上传失败," + e.getMessage();
