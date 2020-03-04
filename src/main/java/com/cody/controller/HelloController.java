@@ -39,7 +39,7 @@ public class HelloController {
     }
 
     /**
-     * 文件类型： MP3 MP4 pdf png 文件夹 1
+     * 文件类型： MP3 MP4 pdf png 文件夹
      *
      * @param file
      * @return
@@ -90,11 +90,9 @@ public class HelloController {
         } catch (ZipException e) {
             e.printStackTrace();
             return "上传失败," + e.getMessage();
-        } catch (IOException e) {
+        } catch (IOException | RuntimeException e) {
             e.printStackTrace();
             return "上传失败," + e.getMessage();
-        } catch (RuntimeException e) {
-            return "上传失败, " + e.getMessage();
         } finally {
             if (files != null) {
                 files.delete();
