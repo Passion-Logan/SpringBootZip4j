@@ -47,8 +47,8 @@ public class HelloController {
      * @return
      */
     @PostMapping("uploadFile")
-    public @ResponseBody String uploadFile(@RequestParam(value = "file", required = true) MultipartFile file) {
-        return AntFunntion(file);
+    public @ResponseBody String uploadFile(@RequestParam(value = "file") MultipartFile file) {
+        return ZipFunction(file);
     }
 
     /**
