@@ -11,6 +11,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Stream;
 import java.util.zip.ZipEntry;
 
+import net.lingala.zip4j.model.AESExtraDataRecord;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -48,7 +49,7 @@ public class HelloController {
      */
     @PostMapping("uploadFile")
     public @ResponseBody String uploadFile(@RequestParam(value = "file") MultipartFile file) {
-        return ZipFunction(file);
+        return JavaFunction(file);
     }
 
     /**
@@ -82,7 +83,7 @@ public class HelloController {
             // checkContent(zipFile, types);
 
             // 防止乱码
-            // zipFile.setCharset(Charset.forName("utf-8"));
+             zipFile.setCharset(Charset.forName("utf-8"));
 
             UUID uuid = UUID.randomUUID();
             String dest = "E:\\download\\" + uuid.toString();
@@ -137,14 +138,22 @@ public class HelloController {
             }
             file.transferTo(files);
 
+
+
+            String encoding = getEncoding(path + "\\" + fileName);
+            zip = new java.util.zip.ZipFile(files, Charset.forName(encoding));
+
+            String[] types = {"mp3", "mp4"};
+            // 校验文件内容
+            CheckContentByJava(zip, types);
+
+
             // 指定解压后的文件夹
             UUID uuid = UUID.randomUUID();
             String dest = "E:\\download\\" + uuid.toString();
             File destDir = new File(dest);
             destDir.mkdir();
 
-            String encoding = getEncoding(path + "\\" + fileName);
-            zip = new java.util.zip.ZipFile(files, Charset.forName(encoding));
             for (Enumeration entries = zip.entries(); entries.hasMoreElements();) {
                 ZipEntry entry = (ZipEntry)entries.nextElement();
                 String zipEntryName = entry.getName();
@@ -254,7 +263,7 @@ public class HelloController {
      * @param zipFile
      * @param types
      */
-    public void checkContent(ZipFile zipFile, String[] types) {
+    public void CheckContent(ZipFile zipFile, String[] types) {
         AtomicBoolean is = new AtomicBoolean(true);
         try {
             zipFile.getFileHeaders().forEach(v -> {
@@ -272,12 +281,22 @@ public class HelloController {
     }
 
     /**
+     * 原生Java解压包校验文件内容
+     * @param zip
+     * @param types
+     */
+    public void CheckContentByJava(java.util.zip.ZipFile zip, String[] types) {
+
+    }
+
+    /**
      * 获取文件名称（防止中文乱码）
      *
      * @param fileHeader
      * @return
      */
     public String getFileNameFromExtraData(FileHeader fileHeader) {
+        String fileName = fileHeader.getFileName();
         if (fileHeader.getExtraDataRecords() != null) {
             for (ExtraDataRecord extraDataRecord : fileHeader.getExtraDataRecords()) {
                 long identifier = extraDataRecord.getHeader();
@@ -291,8 +310,15 @@ public class HelloController {
                 }
             }
         }
+//        else {
+//            try {
+//                return new String(fileName.getBytes("GBK"));
+//            } catch (UnsupportedEncodingException e) {
+//                e.printStackTrace();
+//            }
+//        }
 
-        return fileHeader.getFileName();
+        return fileName;
     }
 
     @SuppressWarnings("unchecked")
