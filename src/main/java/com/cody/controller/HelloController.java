@@ -11,7 +11,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Stream;
 import java.util.zip.ZipEntry;
 
-import net.lingala.zip4j.model.AESExtraDataRecord;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -60,6 +59,7 @@ public class HelloController {
      */
     public String ZipFunction(MultipartFile file) {
         File files = null;
+        String msg = "上传成功";
         try {
             String fileName = file.getOriginalFilename();
             String path = "E:\\download";
@@ -83,7 +83,7 @@ public class HelloController {
             // checkContent(zipFile, types);
 
             // 防止乱码
-             zipFile.setCharset(Charset.forName("utf-8"));
+            zipFile.setCharset(Charset.forName("utf-8"));
 
             UUID uuid = UUID.randomUUID();
             String dest = "E:\\download\\" + uuid.toString();
@@ -100,22 +100,16 @@ public class HelloController {
             });
 
             // 执行上传操作与数据添加 单独封装
-        } catch (ZipException e) {
-            e.printStackTrace();
-            return "上传失败," + e.getMessage();
-        } catch (IOException | RuntimeException e) {
-            e.printStackTrace();
-            return "上传失败," + e.getMessage();
         } catch (Exception e) {
             e.printStackTrace();
-            return "上传失败," + e.getMessage();
+            msg = "上传失败," + e.getMessage();
         } finally {
             if (files != null) {
                 files.delete();
             }
         }
 
-        return "上传成功";
+        return msg;
     }
 
     /**
@@ -127,6 +121,7 @@ public class HelloController {
     public String JavaFunction(MultipartFile file) {
         File files = null;
         java.util.zip.ZipFile zip = null;
+        String msg = "上传成功";
 
         try {
             String fileName = file.getOriginalFilename();
@@ -138,15 +133,16 @@ public class HelloController {
             }
             file.transferTo(files);
 
-
-
             String encoding = getEncoding(path + "\\" + fileName);
             zip = new java.util.zip.ZipFile(files, Charset.forName(encoding));
+
+            if (!zip.getName().contains(".zip")) {
+                throw new RuntimeException("压缩文件不合法.");
+            }
 
             String[] types = {"mp3", "mp4"};
             // 校验文件内容
             CheckContentByJava(zip, types);
-
 
             // 指定解压后的文件夹
             UUID uuid = UUID.randomUUID();
@@ -180,15 +176,25 @@ public class HelloController {
                     }
                 }
             }
-            // 必须关闭，要不然这个zip文件一直被占用着，要删删不掉，改名也不可以，移动也不行，整多了，系统还崩了。
-            zip.close();
-        } catch (IOException e) {
-            e.printStackTrace();
+
         } catch (Exception e) {
             e.printStackTrace();
+            msg = "上传失败," + e.getMessage();
+        } finally {
+            // 必须关闭，要不然这个zip文件一直被占用着，要删删不掉，改名也不可以，移动也不行，整多了，系统还崩了。
+            try {
+                if (zip != null) {
+                    zip.close();
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            if (files.exists()) {
+                files.delete();
+            }
         }
 
-        return "上传成功";
+        return msg;
     }
 
     @SuppressWarnings("unchecked")
@@ -269,32 +275,33 @@ public class HelloController {
             zipFile.getFileHeaders().forEach(v -> {
                 String extractedFile = getFileNameFromExtraData(v);
                 is.set(Stream.of(types).anyMatch(e -> extractedFile.contains(e)));
+                if (!is.compareAndSet(true, false)) {
+                    throw new RuntimeException("压缩包内容错误.");
+                }
             });
         } catch (ZipException e) {
             throw new RuntimeException("未知错误.");
-        } finally {
-            if (!is.compareAndSet(true, false)) {
-                throw new RuntimeException("压缩包内容错误.");
-            }
         }
-
     }
 
     /**
      * 原生Java解压包校验文件内容
+     *
      * @param zip
      * @param types
      */
     public void CheckContentByJava(java.util.zip.ZipFile zip, String[] types) {
-
+        AtomicBoolean is = new AtomicBoolean(true);
+        zip.stream().forEach(v -> {
+            String name = v.getName();
+            System.out.println(name);
+            is.set(Stream.of(types).anyMatch(e -> name.contains(e)));
+            if (!is.compareAndSet(true, false)) {
+                throw new RuntimeException("压缩包内容错误.");
+            }
+        });
     }
 
-    /**
-     * 获取文件名称（防止中文乱码）
-     *
-     * @param fileHeader
-     * @return
-     */
     public String getFileNameFromExtraData(FileHeader fileHeader) {
         String fileName = fileHeader.getFileName();
         if (fileHeader.getExtraDataRecords() != null) {
@@ -310,13 +317,6 @@ public class HelloController {
                 }
             }
         }
-//        else {
-//            try {
-//                return new String(fileName.getBytes("GBK"));
-//            } catch (UnsupportedEncodingException e) {
-//                e.printStackTrace();
-//            }
-//        }
 
         return fileName;
     }
