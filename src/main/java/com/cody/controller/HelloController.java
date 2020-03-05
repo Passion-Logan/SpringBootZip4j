@@ -158,6 +158,11 @@ public class HelloController {
                 // 指定文件路径+当前zip文件的名称
                 String outPath = (destDir + "/" + zipEntryName).replace("/", File.separator);
 
+                // destDir 修改 这个路径 ；
+                // 根据 文件分类 选择不同路径， 视屏 图片  pdf 和 资料(文件夹和html) 保存服务器， 其余的 上传 oss
+                // 解压到指定路径下，单独封装 文件上传操作 以及 数据添加操作
+                // outPath 文件路径；zipEntryName 文件名
+
                 if (!entry.isDirectory()) {
                     // 保存文件路径信息（可利用md5.zip名称的唯一性，来判断是否已经解压）
                     OutputStream out = new FileOutputStream(outPath);
@@ -176,10 +181,6 @@ public class HelloController {
                     }
                 }
             }
-
-
-            // 解压完成，单独封装 文件上传操作 以及 数据添加操作
-
         } catch (Exception e) {
             e.printStackTrace();
             msg = "上传失败," + e.getMessage();
