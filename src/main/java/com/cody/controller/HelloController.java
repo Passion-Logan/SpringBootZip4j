@@ -52,7 +52,7 @@ public class HelloController {
     }
 
     /**
-     * zip4j 方法实现
+     * zip4j 方法实现 注：360压缩包中文会乱码
      *
      * @param file
      * @return
@@ -113,7 +113,7 @@ public class HelloController {
     }
 
     /**
-     * 原生Java方法实现
+     * 原生Java方法实现 注：任意压缩软件都可解
      *
      * @param file
      * @return
@@ -181,9 +181,9 @@ public class HelloController {
             e.printStackTrace();
             msg = "上传失败," + e.getMessage();
         } finally {
-            // 必须关闭，要不然这个zip文件一直被占用着，要删删不掉，改名也不可以，移动也不行，整多了，系统还崩了。
             try {
                 if (zip != null) {
+                    // 必须关闭，要不然这个zip文件一直被占用着，要删删不掉，改名也不可以，移动也不行，整多了，系统还崩了。
                     zip.close();
                 }
             } catch (IOException e) {
@@ -197,6 +197,12 @@ public class HelloController {
         return msg;
     }
 
+    /**
+     * ant解压实现 注：360压缩包中文会乱码
+     *
+     * @param file
+     * @return
+     */
     @SuppressWarnings("unchecked")
     public String AntFunntion(MultipartFile file) {
         File files = null;
