@@ -381,13 +381,11 @@ public class HelloController {
     private String serverPath = "E:\\download";
 
     @PostMapping("isMergeChunks")
-    @ResponseBody
     public void uploadPro(HttpServletRequest request, HttpServletResponse response) throws IOException {
         this.isMergerChunks(request, response);
     }
 
     @PostMapping("getFile")
-    @ResponseBody
     public void getFileFunction(HttpServletRequest request, HttpServletResponse response) throws IOException {
         this.getFile(request, response);
     }
@@ -399,7 +397,6 @@ public class HelloController {
      * @param response
      */
     public void isMergerChunks(HttpServletRequest request, HttpServletResponse response) throws IOException {
-        System.out.println("进入合并UploadActionService后台...");
         // 根据前台的action参数决定要做的动作
         String action = request.getParameter("action");
 
@@ -501,9 +498,6 @@ public class HelloController {
      */
     public void getFile(HttpServletRequest request, HttpServletResponse response) throws IOException {
         response.getWriter().append("Served at: ").append(request.getContextPath());
-
-        System.out.println("进入FileUploadServlet后台...");
-
         // 1.创建DiskFileItemFactory对象，配置缓存用
         DiskFileItemFactory diskFileItemFactory = new DiskFileItemFactory();
 
