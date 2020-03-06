@@ -2,15 +2,22 @@ package com.cody.controller;
 
 import java.io.*;
 import java.nio.ByteBuffer;
+import java.nio.channels.FileChannel;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
-import java.util.Enumeration;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Stream;
 import java.util.zip.ZipEntry;
 
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import org.apache.commons.fileupload.FileItem;
+import org.apache.commons.fileupload.disk.DiskFileItemFactory;
+import org.apache.commons.fileupload.servlet.ServletFileUpload;
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -39,6 +46,7 @@ public class HelloController {
 
     /**
      * 单点续传界面
+     *
      * @return
      */
     @GetMapping("pro")
@@ -365,6 +373,199 @@ public class HelloController {
             }
         }
         return false;
+    }
+
+    /**
+     * 后台统一存放文件的路径
+     */
+    private String serverPath = "E:\\download";
+
+    @PostMapping("isMergeChunks")
+    @ResponseBody
+    public void uploadPro(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        this.isMergerChunks(request, response);
+    }
+
+    @PostMapping("getFile")
+    @ResponseBody
+    public void getFileFunction(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        this.getFile(request, response);
+    }
+
+    /**
+     * 分片操作： 已上传就合并
+     *
+     * @param request
+     * @param response
+     */
+    public void isMergerChunks(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        System.out.println("进入合并UploadActionService后台...");
+        // 根据前台的action参数决定要做的动作
+        String action = request.getParameter("action");
+
+        if ("mergeChunks".equals(action)) {
+            // 获得需要合并的目录
+            String fileMd5 = request.getParameter("fileMd5");
+            // 文件的原始文件名
+            String fileName = request.getParameter("fileName");
+
+            System.out.println("当前合并的目录fileMd5：" + fileMd5);
+            // 读取目录所有文件
+            File f = new File(serverPath + File.separator + fileMd5);
+            // 排除目录，只要文件
+            File[] fileArray = f.listFiles(pathname -> {
+                if (pathname.isDirectory()) {
+                    return false;
+                }
+                return true;
+            });
+            // 转成集合，便于排序
+            List<File> fileList = new ArrayList<>(Arrays.asList(fileArray));
+
+            // 从小到大排序
+            Collections.sort(fileList, (o1, o2) -> {
+                if (Integer.parseInt(o1.getName()) < Integer.parseInt(o2.getName())) {
+                    return -1;
+                }
+                return 1;
+            });
+
+            // fileName：沿用原始的文件名，或者可以使用随机的字符串作为新文件名，但是要 保留原文件的后缀类型
+            File outputFile =
+                new File(serverPath + File.separator + UUID.randomUUID().toString() + File.separator + fileName);
+
+            File parentFile = outputFile.getParentFile();
+            if (!parentFile.exists()) {
+                parentFile.mkdirs();
+            }
+            // 创建文件
+            outputFile.createNewFile();
+
+            // 输出流
+            FileOutputStream fileOutputStream = new FileOutputStream(outputFile);
+            FileChannel outChannel = fileOutputStream.getChannel();
+
+            // 合并，核心就是FileChannel，将多个文件合并为一个文件
+            FileChannel inChannel;
+            for (File file : fileList) {
+                inChannel = new FileInputStream(file).getChannel();
+                inChannel.transferTo(0, inChannel.size(), outChannel);
+                inChannel.close();
+
+                // 删除分片
+                file.delete();
+            }
+
+            // 关闭流
+            fileOutputStream.close();
+            outChannel.close();
+
+            // 清除文件夹
+            File tempFile = new File(serverPath + File.separator + fileMd5);
+            if (tempFile.isDirectory() && tempFile.exists()) {
+                tempFile.delete();
+            }
+
+            System.out.println("合并文件成功：" + outputFile.getAbsolutePath());
+
+        } else if ("checkChunk".equals(action)) {
+            // 校验文件是否已经上传并返回结果给前端，就一个作用：校验块是否存在，假如不存在，前端会再次用上传器传到后台
+
+            // 文件唯一表示
+            String fileMd5 = request.getParameter("fileMd5");
+            // 当前分块下标
+            String chunk = request.getParameter("chunk");
+            // 当前分块大小
+            String chunkSize = request.getParameter("chunkSize");
+
+            // 直接根据块的索引号找到分块文件
+            File checkFile = new File(serverPath + File.separator + fileMd5 + File.separator + chunk);
+
+            // 检查文件是否存在，且大小一致（必须满足这两个条件才认为块是已传成功）
+            response.setContentType("text/html;charset=utf-8");
+            if (checkFile.exists() && checkFile.length() == Integer.parseInt((chunkSize))) {
+                response.getWriter().write("{\"ifExist\":1}");
+            } else {
+                // 假如文件没存在，说明没有上传成功，返回0
+                response.getWriter().write("{\"ifExist\":0}");
+            }
+        }
+    }
+
+    /**
+     * 获取分片文件
+     *
+     * @param request
+     * @param response
+     * @throws IOException
+     */
+    public void getFile(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        response.getWriter().append("Served at: ").append(request.getContextPath());
+
+        System.out.println("进入FileUploadServlet后台...");
+
+        // 1.创建DiskFileItemFactory对象，配置缓存用
+        DiskFileItemFactory diskFileItemFactory = new DiskFileItemFactory();
+
+        // 2. 创建 ServletFileUpload对象
+        ServletFileUpload servletFileUpload = new ServletFileUpload(diskFileItemFactory);
+
+        // 3. 设置文件名称编码
+        servletFileUpload.setHeaderEncoding("utf-8");
+
+        // 4. 开始解析文件
+        // 文件md5获取的字符串
+        String fileMd5 = null;
+        // 文件的索引
+        String chunk = null;
+
+        try {
+            List<FileItem> items = servletFileUpload.parseRequest(request);
+            for (FileItem fileItem : items) {
+
+                if (fileItem.isFormField()) {
+                    // 普通数据,例如字符串
+                    String fieldName = fileItem.getFieldName();
+                    if ("info".equals(fieldName)) {
+                        String info = fileItem.getString("utf-8");
+                        System.out.println("info:" + info);
+                    }
+                    if ("fileMd5".equals(fieldName)) {
+                        fileMd5 = fileItem.getString("utf-8");
+                        System.out.println("fileMd5:" + fileMd5);
+                    }
+                    if ("chunk".equals(fieldName)) {
+                        chunk = fileItem.getString("utf-8");
+                        System.out.println("chunk:" + chunk);
+                    }
+                } else {
+                    // >> 文件
+                    if (StringUtils.isEmpty(fileMd5)) {
+                        // 假如md5没有，就用test作为目录名
+                        fileMd5 = "test";
+                    }
+                    if (StringUtils.isEmpty(chunk)) {
+                        // filename
+                        chunk = fileItem.getName();
+                    }
+
+                    // 如果文件夹没有创建文件夹
+                    File file = new File(serverPath + File.separator + fileMd5);
+                    if (!file.exists()) {
+                        file.mkdirs();
+                    }
+                    // 落地保存文件
+                    // 这时保存的每个块，块先存好，后续会调合并接口，将所有块合成一个大文件
+                    File chunkFile = new File(serverPath + File.separator + fileMd5 + File.separator + chunk);
+                    FileUtils.copyInputStreamToFile(fileItem.getInputStream(), chunkFile);
+
+                }
+
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
 }
