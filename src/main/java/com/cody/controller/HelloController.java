@@ -12,10 +12,7 @@ import java.util.stream.Stream;
 import java.util.zip.ZipEntry;
 
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import net.lingala.zip4j.ZipFile;
@@ -38,6 +35,15 @@ public class HelloController {
     @RequestMapping("/")
     public String hello() {
         return "hello";
+    }
+
+    /**
+     * 单点续传界面
+     * @return
+     */
+    @GetMapping("pro")
+    public String pro() {
+        return "upload";
     }
 
     /**
