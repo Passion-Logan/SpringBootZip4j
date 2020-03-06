@@ -52,6 +52,95 @@ public class HelloController {
     }
 
     /**
+     * 原生Java方法实现 注：任意压缩软件都可解
+     *
+     * @param file
+     * @return
+     */
+    public String JavaFunction(MultipartFile file) {
+        File files = null;
+        java.util.zip.ZipFile zip = null;
+        String msg = "上传成功";
+
+        try {
+            String fileName = file.getOriginalFilename();
+
+            String path = "E:\\download";
+            files = new File(path + "\\" + fileName);
+            if (!files.getParentFile().exists()) {
+                files.getParentFile().mkdirs();
+            }
+            file.transferTo(files);
+
+            String encoding = getEncoding(path + "\\" + fileName);
+            zip = new java.util.zip.ZipFile(files, Charset.forName(encoding));
+
+            if (!zip.getName().contains(".zip")) {
+                throw new RuntimeException("压缩文件不合法.");
+            }
+
+            String[] types = {"mp3", "mp4"};
+            // 校验文件内容
+            CheckContentByJava(zip, types);
+
+            // 指定解压后的文件夹
+            UUID uuid = UUID.randomUUID();
+            String dest = "E:\\download\\" + uuid.toString();
+            File destDir = new File(dest);
+            destDir.mkdir();
+
+            for (Enumeration entries = zip.entries(); entries.hasMoreElements();) {
+                ZipEntry entry = (ZipEntry)entries.nextElement();
+                String zipEntryName = entry.getName();
+                InputStream in = zip.getInputStream(entry);
+
+                // 指定文件路径+当前zip文件的名称
+                String outPath = (destDir + "/" + zipEntryName).replace("/", File.separator);
+
+                // destDir 修改 这个路径 ；
+                // 根据 文件分类 选择不同路径， 视屏 图片 pdf 和 资料(文件夹和html) 保存服务器， 其余的 上传 oss
+                // 解压到指定路径下，单独封装 文件上传操作 以及 数据添加操作
+                // outPath 文件路径；zipEntryName 文件名
+
+                if (!entry.isDirectory()) {
+                    // 保存文件路径信息（可利用md5.zip名称的唯一性，来判断是否已经解压）
+                    OutputStream out = new FileOutputStream(outPath);
+                    byte[] buf1 = new byte[2048];
+                    int len;
+                    while ((len = in.read(buf1)) > 0) {
+                        out.write(buf1, 0, len);
+                    }
+                    in.close();
+                    out.close();
+                } else {
+                    // 判断路径是否存在,不存在则创建文件路径
+                    File filePath = new File(outPath.substring(0, outPath.lastIndexOf(File.separator)));
+                    if (!filePath.exists()) {
+                        filePath.mkdirs();
+                    }
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            msg = "上传失败," + e.getMessage();
+        } finally {
+            try {
+                if (zip != null) {
+                    // 必须关闭，要不然这个zip文件一直被占用着，要删删不掉，改名也不可以，移动也不行，整多了，系统还崩了。
+                    zip.close();
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            if (files.exists()) {
+                files.delete();
+            }
+        }
+
+        return msg;
+    }
+
+    /**
      * zip4j 方法实现 注：360压缩包中文会乱码
      *
      * @param file
@@ -105,95 +194,6 @@ public class HelloController {
             msg = "上传失败," + e.getMessage();
         } finally {
             if (files != null) {
-                files.delete();
-            }
-        }
-
-        return msg;
-    }
-
-    /**
-     * 原生Java方法实现 注：任意压缩软件都可解
-     *
-     * @param file
-     * @return
-     */
-    public String JavaFunction(MultipartFile file) {
-        File files = null;
-        java.util.zip.ZipFile zip = null;
-        String msg = "上传成功";
-
-        try {
-            String fileName = file.getOriginalFilename();
-
-            String path = "E:\\download";
-            files = new File(path + "\\" + fileName);
-            if (!files.getParentFile().exists()) {
-                files.getParentFile().mkdirs();
-            }
-            file.transferTo(files);
-
-            String encoding = getEncoding(path + "\\" + fileName);
-            zip = new java.util.zip.ZipFile(files, Charset.forName(encoding));
-
-            if (!zip.getName().contains(".zip")) {
-                throw new RuntimeException("压缩文件不合法.");
-            }
-
-            String[] types = {"mp3", "mp4"};
-            // 校验文件内容
-            CheckContentByJava(zip, types);
-
-            // 指定解压后的文件夹
-            UUID uuid = UUID.randomUUID();
-            String dest = "E:\\download\\" + uuid.toString();
-            File destDir = new File(dest);
-            destDir.mkdir();
-
-            for (Enumeration entries = zip.entries(); entries.hasMoreElements();) {
-                ZipEntry entry = (ZipEntry)entries.nextElement();
-                String zipEntryName = entry.getName();
-                InputStream in = zip.getInputStream(entry);
-
-                // 指定文件路径+当前zip文件的名称
-                String outPath = (destDir + "/" + zipEntryName).replace("/", File.separator);
-
-                // destDir 修改 这个路径 ；
-                // 根据 文件分类 选择不同路径， 视屏 图片  pdf 和 资料(文件夹和html) 保存服务器， 其余的 上传 oss
-                // 解压到指定路径下，单独封装 文件上传操作 以及 数据添加操作
-                // outPath 文件路径；zipEntryName 文件名
-
-                if (!entry.isDirectory()) {
-                    // 保存文件路径信息（可利用md5.zip名称的唯一性，来判断是否已经解压）
-                    OutputStream out = new FileOutputStream(outPath);
-                    byte[] buf1 = new byte[2048];
-                    int len;
-                    while ((len = in.read(buf1)) > 0) {
-                        out.write(buf1, 0, len);
-                    }
-                    in.close();
-                    out.close();
-                } else {
-                    // 判断路径是否存在,不存在则创建文件路径
-                    File filePath = new File(outPath.substring(0, outPath.lastIndexOf(File.separator)));
-                    if (!filePath.exists()) {
-                        filePath.mkdirs();
-                    }
-                }
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-            msg = "上传失败," + e.getMessage();
-        } finally {
-            try {
-                if (zip != null) {
-                    // 必须关闭，要不然这个zip文件一直被占用着，要删删不掉，改名也不可以，移动也不行，整多了，系统还崩了。
-                    zip.close();
-                }
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-            if (files.exists()) {
                 files.delete();
             }
         }
