@@ -11,3 +11,4 @@
 参考文档：
 [WebUploader API文档](http://fex.baidu.com/webuploader/doc/index.html)
 
+添加sparkmd5 解析文件md5
