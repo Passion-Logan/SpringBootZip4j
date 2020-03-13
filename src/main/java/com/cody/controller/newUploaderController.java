@@ -15,7 +15,7 @@ import javax.servlet.http.HttpServletResponse;
 public class newUploaderController {
 
     /**
-     * @Description: 减产分片是否上传
+     * @Description: 检查分片是否上传
      * @Date: 2020/3/13
      * @Param response:
      * @return: void
