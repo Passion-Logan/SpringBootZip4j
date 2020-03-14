@@ -39,6 +39,13 @@ public class NewUploaderController {
 
     }
 
+    /**
+     * @Description: 合并分片
+     * @Date: 2020/3/14
+     * @Param request:
+     * @Param response:
+     * @return: void
+     */
     @PostMapping("mergeFile")
     public void mergeFile(HttpServletRequest request, HttpServletResponse response) {
 
