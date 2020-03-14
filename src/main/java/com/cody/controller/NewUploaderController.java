@@ -27,6 +27,13 @@ public class NewUploaderController {
 
     }
 
+    /**
+     * @Description: 保存分片文件
+     * @Date: 2020/3/14
+     * @Param request:
+     * @Param response:
+     * @return: void
+     */
     @PostMapping("chunk")
     public void chunk(HttpServletRequest request, HttpServletResponse response) {
 
