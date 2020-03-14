@@ -38,4 +38,9 @@ public class NewUploaderController {
     public void chunk(HttpServletRequest request, HttpServletResponse response) {
 
     }
+
+    @PostMapping("mergeFile")
+    public void mergeFile(HttpServletRequest request, HttpServletResponse response) {
+
+    }
 }
