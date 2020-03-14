@@ -14,7 +14,7 @@ import javax.servlet.http.HttpServletResponse;
  * @date: 2020/3/13 22:52
  * @since JDK 1.8
  */
-public class newUploaderController {
+public class NewUploaderController {
 
     /**
      * @Description: 检查分片是否上传
@@ -28,5 +28,7 @@ public class newUploaderController {
     }
 
     @PostMapping("chunk")
-    public void chunk(HttpServletRequest request, HttpServletResponse response)
+    public void chunk(HttpServletRequest request, HttpServletResponse response) {
+
+    }
 }
