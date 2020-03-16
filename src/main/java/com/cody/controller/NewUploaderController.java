@@ -3,6 +3,7 @@ package com.cody.controller;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import com.cody.response.FileUploadResponse;
 import com.cody.utils.FileUtils;
 import lombok.extern.log4j.Log4j;
 import lombok.extern.slf4j.Slf4j;
@@ -84,7 +85,19 @@ public class NewUploaderController {
      * @return: void
      */
     @PostMapping("mergeFile")
-    public void mergeFile(HttpServletRequest request, HttpServletResponse response) {
+    @ResponseBody
+    public FileUploadResponse mergeFile(FileUploadRequest request) {
+        String fileName = request.getFilename();
+        String path = uploadFolder + "/" + request.getIdentifier() + "/" + fileName;
+        String folder = uploadFolder + "/" + request.getIdentifier();
 
+        FileUtils.merge(path, folder);
+        System.out.println(fileName + "合并成功");
+
+        FileUploadResponse response = new FileUploadResponse();
+        response.setName(fileName);
+        response.setPath(path);
+
+        return response;
     }
 }
