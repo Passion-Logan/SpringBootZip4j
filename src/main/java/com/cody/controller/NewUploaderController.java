@@ -1,7 +1,10 @@
 package com.cody.controller;
 
+import com.cody.request.FileUploadRequest;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.ResponseBody;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -23,8 +26,15 @@ public class NewUploaderController {
      * @return: void
      */
     @GetMapping("chunk")
-    public void chunk(HttpServletResponse response) {
+    @ResponseBody
+    public Object chunk(@ModelAttribute FileUploadRequest chunk, HttpServletResponse response) {
+        if (chunk.getChunkNumber() == 1) {
+            response.setStatus(HttpServletResponse.SC_NOT_MODIFIED);
+        }
 
+        response.setStatus(HttpServletResponse.SC_NOT_MODIFIED);
+
+        return "校验通过";
     }
 
     /**
