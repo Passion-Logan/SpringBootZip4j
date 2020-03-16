@@ -1,7 +1,8 @@
 package com.cody.request;
 
-import lombok.Data;
 import org.springframework.web.multipart.MultipartFile;
+
+import lombok.Data;
 
 /**
  * ClassName: FileUploadRequest
