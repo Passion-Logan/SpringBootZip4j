@@ -79,7 +79,7 @@ export default {
         }
       },
       attrs: {
-        //accept: ACCEPT_CONFIG.getAll()
+        // accept: ACCEPT_CONFIG.getAll()
         accept: 'image/png, application/pdf, audio/mpeg, audio/mp4, video/mp4, image/jpeg, text/plain, application/zip'
       },
       statusText: {
@@ -99,6 +99,11 @@ export default {
         filename: '',
         relativePath: '',
         totalChunks: ''
+      },
+      fileList: [],
+      successFile: {
+        name: '',
+        path: ''
       }
     }
   },
@@ -128,10 +133,10 @@ export default {
       this.fileInfo.filename = file.name
       this.fileInfo.identifier = file.uniqueIdentifier
 
-      console.log(this.fileInfo)
-
       mergeFile(this.fileInfo).then(response => {
-        console.log('上传成功')
+        if (response.code === 2000) {
+          this.fileList.push(response.data)
+        }
       })
     },
     onFileError (rootFile, file, response, chunk) {
