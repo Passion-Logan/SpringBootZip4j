@@ -3,8 +3,10 @@ package com.cody.controller;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import com.cody.utils.FileUtils;
 import lombok.extern.log4j.Log4j;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.*;
 
 import com.cody.request.FileUploadRequest;
@@ -27,6 +29,9 @@ import java.nio.file.Paths;
 @RequestMapping("new/upload")
 @Slf4j
 public class NewUploaderController {
+
+    // @Value("${upload.local.path}")
+    private String uploadFolder = "/home/user";
 
     /**
      * @Description: 检查分片是否上传
@@ -62,10 +67,9 @@ public class NewUploaderController {
         try {
             byte[] bytes = file.getBytes();
             Path path = Paths.get(FileUtils.generatePath(uploadFolder, chunk));
-            //文件写入指定路径
+            // 文件写入指定路径
             Files.write(path, bytes);
             log.debug("文件 {} 写入成功, uuid:{}", chunk.getFilename(), chunk.getIdentifier());
-            chunked.add(chunk.getChunkNumber());
         } catch (IOException e) {
             e.printStackTrace();
         }
