@@ -26,7 +26,7 @@
             <li v-for="file in props.fileList" :key="file.id">
               <uploader-file ref="files" :class="'file_' + file.id" :file="file" :list="true"/>
             </li>
-            <div v-if="!props.fileList.length" class="no-file"><i class="iconfont icon-empty-file"/> 暂无待上传文件</div>
+            <div v-if="!props.fileList.length" class="no-file"><i class="el-icon-search" style="font-size: 20px;"/> 暂无待上传文件</div>
           </ul>
         </div>
       </uploader-list>
@@ -43,7 +43,7 @@
  *   监听函数：$Bus.$on('fileAdded', fn); 文件选择后的回调
  *            $Bus.$on('fileSuccess', fn); 文件上传成功的回调
  */
-import { ACCEPT_CONFIG } from './js/config'
+// import { ACCEPT_CONFIG } from './js/config'
 import SparkMD5 from 'spark-md5'
 import $ from 'jquery'
 import { getToken } from '@/utils/auth'
@@ -125,6 +125,12 @@ export default {
       this.computeMD5(file)
 
       this.$Bus.$emit('fileAdded')
+
+      // 替换pdf以及zip的css
+      if (file.fileType === 'application/pdf' || file.fileType === 'application/zip') {
+        var list = document.getElementsByClassName('file_' + file.id)[0].getElementsByClassName('uploader-file-icon')[0].setAttribute('icon', 'pdf')
+        console.log(list)
+      }
     },
     onFileProgress (rootFile, file, chunk) {
       console.log(`上传中 ${file.name}，chunk：${chunk.startByte / 1024 / 1024} ~ ${chunk.endByte / 1024 / 1024}`)
@@ -227,13 +233,15 @@ export default {
             width: 100%;
             background-color: #fff;
             border: 1px solid #e2e2e2;
-            border-radius: 7px 7px 0 0;
+            border-radius: 7px 7px;
             box-shadow: 0 0 10px rgba(0, 0, 0, .2);
 
             .file-title {
+                color: #303133;
+                font-size: 13px;
                 display: flex;
-                height: 40px;
-                line-height: 40px;
+                height: 33px;
+                line-height: 33px;
                 padding: 0 15px;
                 border-bottom: 1px solid #ddd;
             }
@@ -245,6 +253,8 @@ export default {
                 overflow-x: hidden;
                 overflow-y: auto;
                 background-color: #fff;
+                font-size: 13px;
+                color: #303133;
 
                 > li {
                     list-style: none;
@@ -263,8 +273,10 @@ export default {
             position: absolute;
             top: 50%;
             left: 50%;
+            color:#303133;
+            font-size: 14px;
             transform: translate(-50%, -50%);
-            font-size: 16px;
+            font-size: 14px;
         }
 
         /deep/.uploader-file-icon {
@@ -273,13 +285,19 @@ export default {
             }
 
             &[icon=image] {
-                background: url(./images/image-icon.png);
+                background: url(./images/image.png);
+            }
+            &[icon=audio] {
+                background: url(./images/mp3.png);
             }
             &[icon=video] {
-                background: url(./images/video-icon.png);
+                background: url(./images/mp4.png);
             }
             &[icon=document] {
-                background: url(./images/text-icon.png);
+                background: url(./images/pdf.png);
+            }
+            &[icon=unknown] {
+                background: url(./images/zip.png);
             }
         }
 
