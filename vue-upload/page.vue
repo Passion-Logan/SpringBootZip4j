@@ -1,7 +1,5 @@
 <template>
   <div class="page">
-    <el-checkbox :indeterminate="isIndeterminate" v-model="checkAll" @change="handleCheckAllChange">全选</el-checkbox>
-    <div style="margin: 15px 0;"/>
     <el-checkbox-group v-model="files" @change="handleCheckedFileChange">
       <el-checkbox v-for="type in fileTypes" :label="type.cityName" :key="type.id">{{ type.cityName }}</el-checkbox>
     </el-checkbox-group>
@@ -9,7 +7,7 @@
     <el-button v-if="isShow" type="primary" plain @click="isChoiceType">上传文件</el-button>
     <el-button v-if="isEdit" type="primary" plain @click="changeUpload">上传文件</el-button>
 
-    <globalUploaders v-if="isShow" :accept-types="files"/>
+    <globalUploaders v-if="isShow" :accept-types="files" @successData="getSuccessData"/>
     <div v-if="isEdit" style="margin-top: 10px;">
       <el-tag v-for="f in thisFile" :key="f.id" closable @close="handleClose(f)">{{ f.name }}</el-tag>
     </div>
@@ -38,7 +36,7 @@
 // 按钮数据
 const fileType = [{ id: 1, cityName: 'MP3' }, { id: 2, cityName: 'MP4' }, { id: 3, cityName: 'PNG' }, { id: 4, cityName: 'PDF' }, { id: 5, cityName: 'ZIP' }]
 // 全选按钮
-const AllType = ['PDF', 'MP3', 'MP4', 'PNG', 'ZIP']
+// const AllType = ['PDF', 'MP3', 'MP4', 'PNG', 'ZIP']
 // 测试编辑回显
 const myFile = [
   { id: '31231232132132', name: '测试1.mp3', type: 1 },
@@ -54,14 +52,14 @@ export default {
     return {
       isShow: false,
       isEdit: false,
-      checkAll: false,
-      isIndeterminate: true,
       fileTypes: fileType,
 
       // 选中类型
-      files: ['PDF', 'MP3'],
+      files: [],
       // 测试编辑
-      thisFile: ''
+      thisFile: '',
+      // 上传成功后的回调数据 和表单数据一起传给后台
+      successFiles: []
     }
   },
   computed: {
@@ -81,10 +79,13 @@ export default {
   created () {
   },
   mounted () {
-    this.thisFile = myFile
+    this.thisFile = ''
     this.isShow = true
   },
   methods: {
+    getSuccessData (val) {
+      this.successFiles.push(val)
+    },
     isChoiceType () {
       // 校验是否选择类型
       if (this.files.length === 0) {
@@ -120,14 +121,7 @@ export default {
         this.changeUpload()
       }
     },
-    handleCheckAllChange (val) {
-      this.files = val ? AllType : []
-      this.isIndeterminate = false
-    },
     handleCheckedFileChange (value) {
-      const checkedCount = value.length
-      this.checkAll = checkedCount === this.fileTypes.length
-      this.isIndeterminate = checkedCount > 0 && checkedCount < this.fileTypes.length
       // 改变选择后重新加载组件
       this.isShow = false
       this.$nextTick(() => { this.isShow = true })
