@@ -52,6 +52,12 @@ import { mergeFile } from '@/api/upload'
 
 export default {
   components: {},
+  props: {
+    acceptTypes: {
+      type: Array,
+      default: null
+    }
+  },
   data () {
     return {
       options: {
@@ -80,7 +86,8 @@ export default {
       },
       attrs: {
         // accept: ACCEPT_CONFIG.getAll()
-        accept: 'image/png, application/pdf, audio/mpeg, audio/mp4, video/mp4, image/jpeg, text/plain, application/zip'
+        accept: this.getAccept(this.acceptTypes)
+        // accept: 'image/png, application/pdf, audio/mpeg, audio/mp4, video/mp4, image/jpeg, text/plain, application/zip'
       },
       statusText: {
         success: '成功了',
@@ -104,7 +111,8 @@ export default {
       successFile: {
         name: '',
         path: ''
-      }
+      },
+      params: []
     }
   },
   computed: {
@@ -116,6 +124,13 @@ export default {
   created () {
   },
   mounted () {
+    this.$Bus.$on('openUploader', query => {
+      this.params = query || {}
+
+      if (this.$refs.uploadBtn) {
+        $('#global-uploader-btn').click()
+      }
+    })
   },
   destroyed () {
     this.$Bus.$off('openUploader')
@@ -125,12 +140,6 @@ export default {
       this.computeMD5(file)
 
       this.$Bus.$emit('fileAdded')
-
-      // 替换pdf以及zip的css
-      if (file.fileType === 'application/pdf' || file.fileType === 'application/zip') {
-        var list = document.getElementsByClassName('file_' + file.id)[0].getElementsByClassName('uploader-file-icon')[0].setAttribute('icon', 'pdf')
-        console.log(list)
-      }
     },
     onFileProgress (rootFile, file, chunk) {
       console.log(`上传中 ${file.name}，chunk：${chunk.startByte / 1024 / 1024} ~ ${chunk.endByte / 1024 / 1024}`)
@@ -218,6 +227,32 @@ export default {
         type: 'error',
         duration: 2000
       })
+    },
+    getAccept (arrayType) {
+      const typeString = arrayType.reduce((pre, cur) => {
+        return pre + this.acceptType(cur) + ', '
+      }, '')
+      return typeString.substr(0, typeString.length - 1)
+    },
+    acceptType (type) {
+      switch (type) {
+        case 'MP3':
+          return 'audio/mpeg'
+          break
+        case 'MP4':
+          return 'audio/mp4, video/mp4'
+          break
+        case 'PNG':
+          return 'image/png'
+          break
+        case 'PDF':
+          return 'application/pdf'
+          break
+        case 'ZIP':
+          return 'application/zip'
+          break
+        default: return ''
+      }
     }
   }
 }
@@ -306,4 +341,9 @@ export default {
         }
     }
 
+    /* 隐藏上传按钮 */
+    #global-uploader-btn {
+        position: absolute;
+        clip: rect(0, 0, 0, 0);
+    }
 </style>
