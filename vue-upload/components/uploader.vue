@@ -150,9 +150,13 @@ export default {
 
       mergeFile(this.fileInfo).then(response => {
         if (response.code === 2000) {
+          this.$emit('successData', response.data)
+
           this.fileList.push(response.data)
         }
       })
+
+      // 向父组件传递回调值
     },
     onFileError (rootFile, file, response, chunk) {
       this.$message({
