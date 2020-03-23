@@ -155,8 +155,6 @@ export default {
           this.fileList.push(response.data)
         }
       })
-
-      // 向父组件传递回调值
     },
     onFileError (rootFile, file, response, chunk) {
       this.$message({
