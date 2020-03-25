@@ -14,3 +14,5 @@
 添加sparkmd5 解析文件md5
 
 改用vue-simploe-uploader上传
+
+添加封装的组件
