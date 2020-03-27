@@ -20,6 +20,16 @@
         <div slot-scope="props" :class="{'collapse': collapse}" class="file-panel">
           <div class="file-title">
             <span>文件列表</span>
+            <el-tooltip effect="light" placement="right">
+              <div slot="content" style="font-size:10px;">上传须知：<br>
+                1. 文件转码的时候切勿上传,否则会造成文件损坏<br>
+                2. 必须先选择课件类型再上传课件<br>
+                3. 支持批量上传,按住Ctrl键鼠标左键多选文件<br>
+                4. 文件顺序:通过名称排序,系统会自动去掉数字只取名称(1_图片.png/2_音乐.mp3)<br>
+                5. PPT文件转为HTML,打一个ZIP压缩包上传,系统会自动解压<br>
+              </div>
+              <i class="el-icon-tickets bidu"/>
+            </el-tooltip>
           </div>
 
           <ul class="file-list">
@@ -231,6 +241,9 @@ export default {
       })
     },
     getAccept (arrayType) {
+      if (arrayType.legnth === 1) {
+        return this.acceptType(arrayType[0])
+      }
       const typeString = arrayType.reduce((pre, cur) => {
         return pre + this.acceptType(cur) + ', '
       }, '')
@@ -238,21 +251,16 @@ export default {
     },
     acceptType (type) {
       switch (type) {
-        case 'MP3':
+        case 3:
           return 'audio/mpeg'
-          break
-        case 'MP4':
+        case 4:
           return 'audio/mp4, video/mp4'
-          break
-        case 'PNG':
+        case 5:
           return 'image/png'
-          break
-        case 'PDF':
+        case 6:
           return 'application/pdf'
-          break
-        case 'ZIP':
+        case 7:
           return 'application/zip'
-          break
         default: return ''
       }
     }
@@ -263,15 +271,16 @@ export default {
 <style scoped lang="scss">
     #global-uploader {
         .uploader-app {
-            width: 520px;
+            // width: 520px;
+            width: 100%;
         }
 
         .file-panel {
             width: 100%;
             background-color: #fff;
             border: 1px solid #e2e2e2;
-            border-radius: 7px 7px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, .2);
+            border-radius: 4px 4px;
+            // box-shadow: 0 0 10px rgba(0, 0, 0, .2);
 
             .file-title {
                 color: #303133;
@@ -347,5 +356,11 @@ export default {
     #global-uploader-btn {
         position: absolute;
         clip: rect(0, 0, 0, 0);
+    }
+
+    .bidu {
+      line-height: 32px;
+      font-size: 21px;
+      margin-left: 5px;
     }
 </style>
